@@ -1,4 +1,4 @@
-  :root{
+:root{
     --bg-1:#100F26;
     --bg-2:#181736;
     --bg-3:#211F49;
@@ -155,12 +155,27 @@
   .balance-row .num{font-family:'Manrope',sans-serif; font-size:38px; font-weight:800;}
   .balance-row svg{width:26px;height:26px;}
   .balance-sub{font-size:13px; color:var(--text-muted);}
+  
+  /* ===== УЛУЧШЕННАЯ КНОПКА ПОПОЛНИТЬ БАЛАНС ===== */
   .balance-cta{
     margin-top:16px; display:inline-flex; align-items:center; gap:8px;
-    background:var(--gold); color:#221A03; border:none; border-radius:13px;
-    padding:12px 16px; font-weight:700; font-size:14px; cursor:pointer; font-family:'Manrope',sans-serif;
-    box-shadow:0 8px 20px rgba(240,180,41,.3);
+    background:linear-gradient(135deg, #f7971e, #ffd200) !important;
+    color:#221A03 !important; border:none; border-radius:13px;
+    padding:14px 20px; font-weight:800; font-size:16px; cursor:pointer; 
+    font-family:'Manrope',sans-serif;
+    box-shadow:0 8px 25px rgba(240,180,41,0.5) !important;
+    transition:all 0.3s ease !important;
+    width:100%;
+    justify-content:center;
   }
+  .balance-cta:hover{
+    transform:translateY(-3px) !important;
+    box-shadow:0 12px 35px rgba(240,180,41,0.7) !important;
+  }
+  .balance-cta:active{
+    transform:scale(0.97) !important;
+  }
+
   .const-dot{position:absolute; border-radius:50%; background:var(--gold-soft);}
 
   .stats-row{display:flex; gap:10px; margin-bottom:18px;}
@@ -226,6 +241,38 @@
   .summary{border-radius:18px; padding:14px 16px; margin-bottom:16px;}
   .summary-row{display:flex; justify-content:space-between; font-size:13px; color:var(--text-muted); padding:4px 0;}
   .summary-row.total{color:var(--text); font-weight:700; font-size:15px; border-top:1px solid var(--glass-border); margin-top:6px; padding-top:10px;}
+
+  /* ===== УЛУЧШЕННАЯ КНОПКА ОПЛАТИТЬ ===== */
+  .pay-btn{
+    background:linear-gradient(135deg, #f7971e, #ffd200) !important;
+    color:#221A03 !important;
+    font-weight:800 !important;
+    font-size:20px !important;
+    padding:18px !important;
+    border-radius:16px !important;
+    border:none !important;
+    width:100% !important;
+    box-shadow:0 4px 30px rgba(240,180,41,0.5) !important;
+    transition:all 0.3s ease !important;
+    cursor:pointer !important;
+    font-family:'Manrope',sans-serif !important;
+    margin-top:20px !important;
+    opacity:0.7;
+    transform:scale(0.98);
+    pointer-events:none;
+  }
+  .pay-btn.active{
+    opacity:1 !important;
+    transform:scale(1) !important;
+    pointer-events:auto !important;
+  }
+  .pay-btn:hover{
+    transform:translateY(-3px) !important;
+    box-shadow:0 8px 40px rgba(240,180,41,0.7) !important;
+  }
+  .pay-btn:active{
+    transform:scale(0.97) !important;
+  }
 
   /* ---------- Bottom nav ---------- */
   .bottom-nav{
