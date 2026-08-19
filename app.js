@@ -1,3 +1,20 @@
+/**
+ * MINIMAL EXAMPLE — Telegram Stars backend
+ * ------------------------------------------------------------
+ * This is NOT a ready-to-run server. It shows the two endpoints
+ * the mini app's front end (index.html) expects at CONFIG.API_BASE,
+ * and the shape of data they exchange. You still need to:
+ *
+ *   1. npm install express node-fetch crypto
+ *   2. Create a bot with @BotFather, get its token, set BOT_TOKEN below
+ *      (use an environment variable in real deployments — never commit it)
+ *   3. Add your own persistent storage (a real DB) instead of the
+ *      in-memory `db` object here
+ *   4. Set up a webhook endpoint so Telegram can push you the
+ *      "successful_payment" update and you can credit balances
+ *      server-side (see bottom of file)
+ * ------------------------------------------------------------
+ */
 
 const express = require('express');
 const crypto = require('crypto');
