@@ -11,7 +11,7 @@
  *   3. Add your own persistent storage (a real DB) instead of the
  *      in-memory `db` object here
  *   4. Set up a webhook endpoint so Telegram can push you the
- *      "successful_payment" update and you can credit balances
+ *      "successful_payment" update and you can credit balnces
  *      server-side (see bottom of file)
  * ------------------------------------------------------------
  */
