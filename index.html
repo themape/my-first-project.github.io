@@ -7,64 +7,26 @@
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 <div class="app">
 
   <button class="theme-toggle glass" onclick="toggleTheme()" aria-label="Переключить тему" id="theme-toggle-btn"></button>
 
-  <!-- ================= AUTH SCREEN ================= -->
-  <section class="screen active" id="screen-auth">
+  <!-- ================= GATE SCREEN (shown outside Telegram) ================= -->
+  <section class="screen active" id="screen-gate">
     <div class="auth-wrap">
       <div class="brand">
         <div class="logo-mark twinkle" id="ic-logo"></div>
         <h1>Nova</h1>
-        <p>Вход в личный кабинет мини-приложения Telegram</p>
+        <p id="gate-text">Проверяем, что приложение открыто внутри Telegram…</p>
       </div>
-
-      <div class="tabs glass">
-        <button class="tab-btn active" id="tab-login" onclick="switchAuthTab('login')">Вход</button>
-        <button class="tab-btn" id="tab-register" onclick="switchAuthTab('register')">Регистрация</button>
-      </div>
-
-      <!-- LOGIN FORM -->
-      <form class="form" id="form-login" onsubmit="return handleLogin(event)">
-        <div class="field">
-          <label for="login-username">Логин или email</label>
-          <input id="login-username" type="text" autocomplete="username" required>
-        </div>
-        <div class="field">
-          <label for="login-password">Пароль</label>
-          <input id="login-password" type="password" autocomplete="current-password" required>
-          <div class="hint" id="login-error"></div>
-        </div>
-        <button class="btn-primary" type="submit">Войти</button>
-        <button class="btn-glass glass" type="button" onclick="handleTelegramAuth()" id="tg-auth-btn"></button>
-      </form>
-
-      <!-- REGISTER FORM -->
-      <form class="form" id="form-register" style="display:none" onsubmit="return handleRegister(event)">
-        <div class="field">
-          <label for="reg-name">Имя</label>
-          <input id="reg-name" type="text" autocomplete="name" required>
-        </div>
-        <div class="field">
-          <label for="reg-username">Логин</label>
-          <input id="reg-username" type="text" autocomplete="username" required>
-        </div>
-        <div class="field">
-          <label for="reg-password">Пароль</label>
-          <input id="reg-password" type="password" autocomplete="new-password" minlength="6" required>
-          <div class="hint" id="register-error"></div>
-        </div>
-        <button class="btn-primary" type="submit">Создать аккаунт</button>
-      </form>
-
       <div class="tg-hint glass" id="tg-user-hint-wrap">
         <span id="ic-hint"></span>
-        <span id="tg-user-hint">Откройте это приложение через кнопку в боте Telegram, чтобы данные подтягивались автоматически.</span>
+        <span>Это мини-приложение работает только внутри Telegram и не поддерживает вход по логину и паролю — доступ определяется вашим Telegram-аккаунтом автоматически.</span>
       </div>
+      <a class="btn-primary" style="text-align:center; text-decoration:none; display:block;" id="gate-open-btn" href="https://t.me/" target="_blank" rel="noopener">Открыть в Telegram</a>
     </div>
   </section>
 
@@ -116,9 +78,9 @@
         <div><div class="tt">Настройки</div><div class="ss">Профиль и уведомления</div></div>
         <div class="arrow" id="ic-arrow-3"></div>
       </div>
-      <div class="menu-item glass danger" onclick="handleLogout()">
+      <div class="menu-item glass danger" onclick="handleClose()">
         <div class="ic" id="ic-menu-logout"></div>
-        <div><div class="tt">Выйти</div></div>
+        <div><div class="tt">Закрыть приложение</div></div>
         <div class="arrow" id="ic-arrow-4"></div>
       </div>
     </div>
@@ -183,7 +145,347 @@
 </div>
 
 <script>
-// Весь JavaScript код остается без изменений
+/* =========================================================
+   ICONS — hand-built inline SVGs, no external icon packs
+========================================================= */
+const ICONS = {
+  logo: `<svg viewBox="0 0 32 32" fill="none"><path d="M16 5c1.8 4.6 3 6.4 7.6 8.2C19 15 17.8 16.8 16 21.4c-1.8-4.6-3-6.4-7.6-8.2C13 11.4 14.2 9.6 16 5z" fill="#221A03"/></svg>`,
+  star: `<svg viewBox="0 0 24 24" fill="none"><path d="M12 3c1.4 3.6 2.3 4.9 5.8 6.3-3.5 1.4-4.4 2.7-5.8 6.3-1.4-3.6-2.3-4.9-5.8-6.3C9.7 7.9 10.6 6.6 12 3z" fill="var(--gold)"/></svg>`,
+  starOutline: `<svg viewBox="0 0 24 24" fill="none"><path d="M12 3c1.4 3.6 2.3 4.9 5.8 6.3-3.5 1.4-4.4 2.7-5.8 6.3-1.4-3.6-2.3-4.9-5.8-6.3C9.7 7.9 10.6 6.6 12 3z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>`,
+  card: `<svg class="icon" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2.5"/><path d="M3 10.5h18"/><path d="M7 15h4"/></svg>`,
+  history: `<svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v4.2l3 2.2"/></svg>`,
+  settings: `<svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 3.5v2.4M12 18.1v2.4M20.5 12h-2.4M5.9 12H3.5M17.7 6.3l-1.7 1.7M8 16l-1.7 1.7M17.7 17.7L16 16M8 8L6.3 6.3"/></svg>`,
+  logout: `<svg class="icon" viewBox="0 0 24 24"><rect x="4" y="4" width="9" height="16" rx="2"/><path d="M8 12h11M15 8l4 4-4 4"/></svg>`,
+  chevron: `<svg class="icon" viewBox="0 0 24 24" style="width:16px;height:16px"><path d="M9 5l7 7-7 7"/></svg>`,
+  paperplane: `<svg class="icon" viewBox="0 0 24 24"><path d="M21 4L3 11.5l6.5 2.3M21 4l-3.6 16-7.9-6.2M21 4L9.9 13.8"/></svg>`,
+  check: `<svg class="icon" viewBox="0 0 24 24" style="width:16px;height:16px"><path d="M4 12.5l5 5L20 7"/></svg>`,
+  alert: `<svg class="icon" viewBox="0 0 24 24" style="width:16px;height:16px"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>`,
+  sun: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.4M12 19.1v2.4M21.5 12h-2.4M4.9 12H2.5M18.4 5.6l-1.7 1.7M7.3 16.7l-1.7 1.7M18.4 18.4l-1.7-1.7M7.3 7.3L5.6 5.6"/></svg>`,
+  moon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.2A8.5 8.5 0 1 1 9.8 4a6.7 6.7 0 0 0 10.2 10.2z"/></svg>`,
+};
+
+function mountIcons(){
+  document.getElementById('ic-logo').innerHTML = ICONS.logo;
+  document.getElementById('ic-balance-star').innerHTML = ICONS.star;
+  document.getElementById('ic-stat-star').innerHTML = ICONS.star;
+  document.getElementById('ic-hint').innerHTML = ICONS.paperplane;
+  document.getElementById('ic-menu-topup').innerHTML = ICONS.starOutline;
+  document.getElementById('ic-menu-history').innerHTML = ICONS.history;
+  document.getElementById('ic-menu-settings').innerHTML = ICONS.settings;
+  document.getElementById('ic-menu-logout').innerHTML = ICONS.logout;
+  ['1','2','3','4'].forEach(n => document.getElementById('ic-arrow-'+n).innerHTML = ICONS.chevron);
+  document.getElementById('ic-method-stars').innerHTML = ICONS.starOutline;
+  document.getElementById('ic-method-card').innerHTML = ICONS.card;
+  document.getElementById('ic-nav-cabinet').innerHTML = `<svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20.5c0-4 3.4-6.6 7.5-6.6s7.5 2.6 7.5 6.6"/></svg>`;
+  document.getElementById('ic-nav-donate').innerHTML = ICONS.starOutline;
+  document.getElementById('theme-toggle-btn').innerHTML = ICONS.moon;
+}
+
+/* =========================================================
+   STATE (frontend-only demo — see payment notes near the bottom)
+========================================================= */
+const state = {
+  currentUser: null,
+  selectedAmount: 100,
+  selectedMethod: 'stars',
+  theme: 'dark',
+  hitIndex: 0,
+  hitDiscount: 10,
+};
+
+const PACKAGE_AMOUNTS = [50, 100, 250, 500, 1000, 2500];
+let hitRefreshTimer;
+
+const tg = window.Telegram ? window.Telegram.WebApp : null;
+
+/* ---------------------------------------------------------------
+   CONFIG — fill these in once your bot backend is deployed.
+   API_BASE:     base URL of your server (handles Bot API calls
+                  with your bot token — never put the token here).
+   BOT_USERNAME: your bot's @username, used only for the
+                  "Open in Telegram" link shown outside Telegram.
+--------------------------------------------------------------- */
+const CONFIG = {
+  API_BASE: '',           // e.g. 'https://your-server.com/api'
+  BOT_USERNAME: 'threerodina_bot', // e.g. 'nova_topup_bot'
+};
+
+function isRunningInTelegram(){
+  // Real Telegram clients populate initData (a signed, non-empty
+  // string) when the mini app is launched from the bot/menu button.
+  return !!(tg && typeof tg.initData === 'string' && tg.initData.length > 0);
+}
+
+function init(){
+  mountIcons();
+  document.getElementById('gate-open-btn').href = 'https://t.me/' + CONFIG.BOT_USERNAME;
+
+  if (tg) {
+    tg.ready();
+    tg.expand();
+    if (tg.setHeaderColor) { try { tg.setHeaderColor('secondary_bg_color'); } catch(e){} }
+  }
+
+  if (isRunningInTelegram()) {
+    const tgUser = tg.initDataUnsafe && tg.initDataUnsafe.user;
+    const user = {
+      name: (tgUser && (tgUser.first_name || tgUser.username)) || 'Пользователь',
+      username: (tgUser && (tgUser.username || ('id' + tgUser.id))) || 'unknown',
+      balance: 0, totalTopUp: 0,
+      joined: new Date().toLocaleDateString('ru-RU', { day:'2-digit', month:'short', year:'numeric' })
+    };
+    loginAs(user);
+  } else {
+    document.getElementById('gate-text').textContent =
+      'Это приложение открывается только внутри Telegram — через кнопку в боте.';
+  }
+
+  rollHitPackage();
+  renderPackages();
+  selectMethod('stars');
+}
+
+function escapeHtml(str){
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+/* ---------------- Theme ---------------- */
+function toggleTheme(){
+  state.theme = state.theme === 'dark' ? 'light' : 'dark';
+  document.body.setAttribute('data-theme', state.theme);
+  document.getElementById('theme-toggle-btn').innerHTML = state.theme === 'dark' ? ICONS.moon : ICONS.sun;
+}
+
+/* ---------------- Session (identity comes from Telegram only) ---------------- */
+function loginAs(user){
+  state.currentUser = user;
+  document.getElementById('bottom-nav').classList.remove('hidden');
+  renderCabinet();
+  goTo('cabinet');
+}
+
+function handleClose(){
+  if (tg && tg.close) { tg.close(); }
+  else { showToast('Закрыть можно из окна Telegram', 'success'); }
+}
+
+/* ---------------- Navigation ---------------- */
+function goTo(screen){
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const el = document.getElementById('screen-' + screen);
+  el.classList.add('active');
+  el.classList.add('fade-in');
+  el.scrollTop = 0;
+
+  if (screen === 'cabinet' || screen === 'donate') {
+    document.getElementById('nav-cabinet').classList.toggle('active', screen === 'cabinet');
+    document.getElementById('nav-donate').classList.toggle('active', screen === 'donate');
+  }
+  if (screen === 'donate') {
+    rollHitPackage();
+    renderPackages();
+    renderSummary();
+    clearInterval(hitRefreshTimer);
+    hitRefreshTimer = setInterval(() => { rollHitPackage(); renderPackages(); }, 20000);
+  } else {
+    clearInterval(hitRefreshTimer);
+  }
+}
+
+/* ---------------- Cabinet render ---------------- */
+function renderCabinet(){
+  const u = state.currentUser;
+  if (!u) return;
+  const initial = (u.name || u.username || '?').charAt(0).toUpperCase();
+  document.getElementById('cabinet-avatar').textContent = initial;
+  document.getElementById('donate-avatar').textContent = initial;
+  document.getElementById('balance-value').textContent = u.balance;
+  document.getElementById('username-display').textContent = '@' + u.username;
+  document.getElementById('stat-total').textContent = u.totalTopUp;
+  document.getElementById('stat-date').textContent = u.joined;
+}
+
+/* ---------------- Donate: dynamic "hit" package ---------------- */
+function rollHitPackage(){
+  state.hitIndex = Math.floor(Math.random() * PACKAGE_AMOUNTS.length);
+  state.hitDiscount = 5 + Math.floor(Math.random() * 21); // 5–25%
+}
+
+function priceFor(amount, isHit){
+  const base = amount * 1.3;
+  if (!isHit) return { price: base, old: null };
+  const discounted = base * (1 - state.hitDiscount / 100);
+  return { price: discounted, old: base };
+}
+
+function renderPackages(){
+  const grid = document.getElementById('pkg-grid');
+  grid.innerHTML = '';
+  PACKAGE_AMOUNTS.forEach((amount, i) => {
+    const isHit = i === state.hitIndex;
+    const { price, old } = priceFor(amount, isHit);
+    const el = document.createElement('div');
+    el.className = 'pkg glass' + (amount === state.selectedAmount ? ' selected' : '');
+    el.onclick = () => selectAmount(amount, el);
+    el.innerHTML = `
+      ${isHit ? `<div class="badge">Хит · -${state.hitDiscount}%</div>` : ''}
+      <div class="amt">${ICONS.star} ${amount}</div>
+      <div class="price">${old ? `<span class="old">${old.toFixed(0)} ₽</span>` : ''}<span>${price.toFixed(0)} ₽</span></div>
+    `;
+    grid.appendChild(el);
+  });
+}
+
+function selectAmount(amount, el){
+  state.selectedAmount = amount;
+  document.getElementById('custom-amount-input').value = '';
+  document.querySelectorAll('.pkg').forEach(p => p.classList.remove('selected'));
+  el.classList.add('selected');
+  renderSummary();
+}
+
+function selectCustomAmount(val){
+  const n = parseInt(val, 10);
+  if (!n || n < 1) return;
+  state.selectedAmount = n;
+  document.querySelectorAll('.pkg').forEach(p => p.classList.remove('selected'));
+  renderSummary();
+}
+
+function selectMethod(method){
+  state.selectedMethod = method;
+  document.querySelectorAll('.pay-method').forEach(p => {
+    p.classList.toggle('selected', p.dataset.method === method);
+  });
+  renderSummary();
+}
+
+function renderSummary(){
+  const amt = state.selectedAmount || 0;
+  document.getElementById('sum-amount').textContent = amt + ' ★';
+  document.getElementById('sum-method').textContent =
+    state.selectedMethod === 'stars' ? 'Telegram Stars' : 'ЮKassa (карта / СБП)';
+  document.getElementById('sum-total').textContent =
+    state.selectedMethod === 'stars' ? amt + ' ★' : (amt * 1.3).toFixed(0) + ' ₽';
+}
+
+/* ---------------- Payment (simulated) ---------------- */
+function handlePayment(){
+  if (!state.currentUser) { showToast('Сначала войдите в аккаунт', 'error'); return; }
+  const amt = state.selectedAmount;
+  if (!amt || amt < 1) { showToast('Укажите сумму', 'error'); return; }
+  if (state.selectedMethod === 'stars') payWithStars(amt);
+  else payWithYooKassa(amt);
+}
+
+async function payWithStars(amount){
+  /* -----------------------------------------------------------
+     REAL Telegram Stars flow:
+     1. Ask YOUR backend for an invoice link. The backend calls
+        Bot API "createInvoiceLink" with currency "XTR" and the
+        star amount — this requires your bot token, so it must
+        run server-side, never in this file.
+     2. Open that link with Telegram.WebApp.openInvoice(). Telegram
+        handles the actual Stars payment UI natively.
+     3. The backend gets a "successful_payment" update from
+        Telegram and credits the balance there — the client
+        callback below is only used to refresh the UI, it must
+        never be trusted to grant balance by itself.
+  ----------------------------------------------------------- */
+  if (!tg || !tg.openInvoice) {
+    showToast('Оплата Stars доступна только внутри Telegram', 'error');
+    return;
+  }
+  if (!CONFIG.API_BASE) {
+    showToast('Демо-режим: подключите бэкенд (CONFIG.API_BASE), чтобы принимать настоящие Stars', 'error');
+    simulateSuccess(amount, amount + ' ★ (демо)');
+    return;
+  }
+
+  try {
+    showToast('Формирую счёт на оплату…', 'success');
+    const res = await fetch(CONFIG.API_BASE + '/create-invoice-link', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ amount, initData: tg.initData })
+    });
+    const data = await res.json();
+    if (!data.ok || !data.link) throw new Error(data.error || 'Не удалось создать счёт');
+
+    tg.openInvoice(data.link, (status) => {
+      if (status === 'paid') {
+        // Balance itself is credited by your backend via the
+        // Bot API "successful_payment" update. Here we just
+        // refresh the cabinet from the server's source of truth.
+        refreshBalanceFromServer();
+        showToast('Оплата Stars прошла успешно', 'success');
+        goTo('cabinet');
+      } else if (status === 'failed') {
+        showToast('Оплата не прошла', 'error');
+      } else if (status === 'cancelled') {
+        showToast('Оплата отменена', 'error');
+      }
+    });
+  } catch (err) {
+    showToast('Ошибка счёта: ' + err.message, 'error');
+  }
+}
+
+async function refreshBalanceFromServer(){
+  if (!CONFIG.API_BASE || !state.currentUser) return;
+  try {
+    const res = await fetch(CONFIG.API_BASE + '/me', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ initData: tg.initData })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      state.currentUser.balance = data.balance;
+      state.currentUser.totalTopUp = data.totalTopUp;
+      renderCabinet();
+    }
+  } catch (err) { /* non-fatal: UI just keeps last known balance */ }
+}
+
+function payWithYooKassa(amount){
+  /* -----------------------------------------------------------
+     REAL INTEGRATION (ЮKassa):
+     1. BACKEND creates a payment via POST /v3/payments (amount
+        in RUB) with a return_url back into this mini app.
+     2. Redirect: window.location.href = confirmationUrlFromBackend;
+     3. ЮKassa sends a webhook to your backend on success; backend
+        credits the balance. Card data never touches this front end.
+  ----------------------------------------------------------- */
+  showToast('Переход к оплате ЮKassa…', 'success');
+  // window.location.href = confirmationUrlFromYourBackend;
+  simulateSuccess(amount, (amount * 1.3).toFixed(0) + ' ₽ через ЮKassa');
+}
+
+function simulateSuccess(amount, label){
+  setTimeout(() => {
+    const u = state.currentUser;
+    u.balance += amount;
+    u.totalTopUp += amount;
+    renderCabinet();
+    showToast('Оплата прошла: ' + label, 'success');
+    goTo('cabinet');
+  }, 700);
+}
+
+/* ---------------- Toast ---------------- */
+let toastTimer;
+function showToast(msg, type){
+  const t = document.getElementById('toast');
+  t.innerHTML = (type === 'error' ? ICONS.alert : ICONS.check) + '<span>' + escapeHtml(msg) + '</span>';
+  t.className = 'toast glass show ' + (type || '');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2600);
+}
+
+init();
 </script>
 </body>
 </html>
